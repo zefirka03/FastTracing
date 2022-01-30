@@ -23,8 +23,8 @@ int main() {
 	Window win(WIN_X, WIN_Y, "fck", 0);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
 	//scene1
-	World w(16, 8, 16);
-	w.loadFromHeightMap("heightmaps/mountains512-1.png");
+	//World w(16, 8, 16);
+	//w.loadFromHeightMap("heightmaps/mountains512-1.png");
 
 	//scene2
 	//World w(32, 8, 32);
@@ -39,8 +39,8 @@ int main() {
 	//w.loadFromHeightMap("heightmaps/Untitled.png");
 	// 
 	//scene5
-	//World w(2, 2, 2);
-	//w.loadFromHeightMap("heightmaps/Untitled1.png");
+	World w(2, 2, 2);
+	w.loadFromHeightMap("heightmaps/Untitled1.png");
 	//World w(2, 2, 2);
 	//for (int i = 0; i < 10000; i++) {
 	//	w.setBlock(rand() % (64 *64) / 64, rand() / 64 % 64, rand() % 64, 1);
