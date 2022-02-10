@@ -7,13 +7,14 @@
 #include "Camera.h"
 #include "Texture.h"
 #include "CollisionInfo.h"
+#include "FBO.h"
 
-#define WIN_X 1440
-#define WIN_Y 900
+#define WIN_X 1920
+#define WIN_Y 1080
 
 int p_block_id = 1;
 
-const char* curr_map = "worlds/first.wrld";
+const char* curr_map = "worlds/first1.wrld";
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	p_block_id += yoffset;
@@ -21,14 +22,15 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	if (p_block_id < 1) p_block_id = 1;
 }
 
-
 int main() {
-	Window win(WIN_X, WIN_Y, "fck", 0);
+	Window win(WIN_X, WIN_Y, "fck", 1);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
-	World w;
+	World w("worlds/map512.wrld");
+	//World w;
+
 	//scene1
 
-	//w.loadFromHeightMapToFile("heightmaps/mountains512-1.png", "worlds/map16x8x16.wrld");
+	//w.loadFromHeightMapToFile("heightmaps/map16.png", "worlds/map512.wrld");
 
 	//scene2
 	//w.loadFromHeightMap("heightmaps/0qXhFa.png");
@@ -41,7 +43,6 @@ int main() {
 	// 
 	//scene5
 	//w.loadFromHeightMap("heightmaps/Untitled1.png");
-	w.loadFromFile(curr_map);
 	
 	float light_ratio = 1.f;
 
@@ -62,12 +63,20 @@ int main() {
 		0, 0
 	};
 
-	Shader sh;
+	FBO main_fbo, pipe1_fbo, temp_fbo;
+	main_fbo.initTexture(WIN_X, WIN_Y);
+	pipe1_fbo.initTexture(WIN_X, WIN_Y);
+	temp_fbo.initTexture(WIN_X, WIN_Y);
+
+	Shader sh, pipe_1, pipe_2;
 	sh.Init("shaders/tracing3_1.shader", 0);
 	sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
 	sh.setUniform1i("sz_x", w.getSize().x);
 	sh.setUniform1i("sz_y", w.getSize().y);
 	sh.setUniform1i("sz_z", w.getSize().z);
+
+	pipe_1.Init("shaders/pipe_1.shader", 0);
+	pipe_2.Init("shaders/pipe_2.shader", 0);
 
 	Texture texture_pack;
 	texture_pack.loadFromFile("textures/texture_pack_min.jpg");
@@ -88,30 +97,10 @@ int main() {
 	
 	bool r_pressed=false, l_pressed = false;
 	float timer = 0;
+	int sample = 1;
 	while (!win.ShouldClose()) {
 		win.frameStart();
 
-		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_1)) {
-			sh.Init("shaders/tracing.shader", 0);
-			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
-			sh.setUniform1i("sz_x", w.getSize().x);
-			sh.setUniform1i("sz_y", w.getSize().y);
-			sh.setUniform1i("sz_z", w.getSize().z);
-		}
-		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_2)) {
-			sh.Init("shaders/tracing2.shader", 0);
-			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
-			sh.setUniform1i("sz_x", w.getSize().x);
-			sh.setUniform1i("sz_y", w.getSize().y);
-			sh.setUniform1i("sz_z", w.getSize().z);
-		}
-		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_3)) {
-			sh.Init("shaders/tracing3.shader", 0);
-			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
-			sh.setUniform1i("sz_x", w.getSize().x);
-			sh.setUniform1i("sz_y", w.getSize().y);
-			sh.setUniform1i("sz_z", w.getSize().z);
-		}
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_4)) {
 			sh.Init("shaders/tracing3_1.shader", 0);
 			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
@@ -135,7 +124,6 @@ int main() {
 			light_ratio -= 3 * win.get_deltaTime();
 			sh.setUniform1f("light_ratio", light_ratio);
 		}
-		
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) l_pressed = false;
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) r_pressed = false;
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && (!l_pressed || glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_ALT))) {
@@ -154,6 +142,7 @@ int main() {
 				}
 			}
 			l_pressed = true;
+			sample = 1;
 		}
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS && (!r_pressed || glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_ALT))) {
 			CollisionInfo cl;
@@ -171,21 +160,45 @@ int main() {
 				}
 			}
 			r_pressed = true;
+			sample = 1;
 		}
+		if (cam.update(win)) sample = 1;
 
-		cam.update(win);
 		sh.setCamera(cam);
 
 		sh.setUniform1f("tr",timer);
 		texture_pack.bind();
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssbo);
-		sh.use();
 
+
+		//pipeline
+
+		temp_fbo.bind();
+		main_vao.setShader(sh);
 		main_vao.draw();
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		temp_fbo.unbind();
+
+		main_fbo.bind();
+		main_vao.setShader(pipe_1);
+		pipe_1.setUniform1i("curr_sample", sample);
+		pipe_1.setUniform1i("tex1", 0);
+		glActiveTexture(GL_TEXTURE0);
+		main_fbo.bindFBO_Texture();
+		pipe_1.setUniform1i("tex2", 1);
+		glActiveTexture(GL_TEXTURE1);
+		temp_fbo.bindFBO_Texture();
+		main_vao.draw();
+
+		FBO::bindDefault();
+		main_vao.setShader(pipe_2);
+		glActiveTexture(GL_TEXTURE0);
+		main_fbo.bindFBO_Texture();
+		main_vao.draw();
 		
 		timer += win.get_deltaTime();
 		win.frameEnd();
+		sample++;
 	}
 
 	glDeleteBuffers(1, &ssbo);

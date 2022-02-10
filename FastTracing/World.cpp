@@ -90,13 +90,14 @@ void World::loadFromHeightMapToFile(const char* heightmap_path, const char* file
 void World::loadFromFile(const char* path) {
 	FILE* file;
 	this->file_pth = path;
-	if (!fopen_s(&file, path, "r")) {
+	if (!fopen_s(&file, path, "rb")) {
 		int sz_x, sz_y, sz_z;
 		fscanf_s(file, "Chunks sizes:\nChunk x: %d\nChunk y: %d\nChunk z: %d\n", &sz_x, &sz_y, &sz_z);
+		printf("Chunks sizes:\nChunk x: %d\nChunk y: %d\nChunk z: %d\n", sz_x, sz_y, sz_z);
 		this->init(sz_x, sz_y, sz_z);
 		fread(this->data, sizeof(ui), this->getDataSize(), file);
 		for (int i = 0; i < sz_x * sz_y * sz_z; i++)
-			memcpy(chunks[i].getData(), &data[i * count], count * sizeof(ui));
+			memcpy(chunks[i].getData(), &this->data[i * count], count * sizeof(ui));
 		fclose(file);
 	}
 	else {
@@ -111,7 +112,7 @@ void World::loadFromFile(const char* path) {
 
 void World::saveToFile(const char* path) {
 	FILE* file;
-	fopen_s(&file, path, "wb+");
+	fopen_s(&file, path, "wb");
 
 	fprintf(file, "Chunks sizes:\n");
 	fprintf(file, ("Chunk x: " + std::to_string(this->getSize().x) + "\n").c_str());

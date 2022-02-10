@@ -97,5 +97,11 @@
     <None Include="shaders\tracing3_2.shader">
       <Filter>Исходные файлы\shaders</Filter>
     </None>
+    <None Include="shaders\pipe_1.shader">
+      <Filter>Исходные файлы\shaders</Filter>
+    </None>
+    <None Include="shaders\pipe_2.shader">
+      <Filter>Исходные файлы\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

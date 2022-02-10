@@ -1,5 +1,6 @@
 #pragma once
 #include "globalGL.h"
+#include "Texture.h"
 
 class FBO {
 public:
@@ -9,10 +10,11 @@ public:
 	void bind();
 	void clear();
 	void unbind();
+	void bindFBO_Texture();
 	static void bindDefault();
 	~FBO();
 private:
 	GLuint fbo_id;
-	GLuint texColorBuffer;
+	Texture tex;
 };
 

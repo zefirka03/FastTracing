@@ -169,6 +169,8 @@
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\pipe_1.shader" />
+    <None Include="shaders\pipe_2.shader" />
     <None Include="shaders\tracing.shader" />
     <None Include="shaders\tracing2.shader" />
     <None Include="shaders\tracing3.shader" />
