@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
@@ -7,7 +8,7 @@
 #include <ctime>
 #include <cmath>
 #include <algorithm>
-
+#include <cstdio>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

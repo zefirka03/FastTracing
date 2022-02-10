@@ -13,38 +13,37 @@
 
 int p_block_id = 1;
 
+const char* curr_map = "worlds/first.wrld";
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	p_block_id += yoffset;
 	if (p_block_id > 17) p_block_id = 17;
 	if (p_block_id < 1) p_block_id = 1;
 }
 
+
 int main() {
 	Window win(WIN_X, WIN_Y, "fck", 0);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
+	World w;
 	//scene1
-	//World w(16, 8, 16);
-	//w.loadFromHeightMap("heightmaps/mountains512-1.png");
+
+	//w.loadFromHeightMapToFile("heightmaps/mountains512-1.png", "worlds/map16x8x16.wrld");
 
 	//scene2
-	//World w(32, 8, 32);
 	//w.loadFromHeightMap("heightmaps/0qXhFa.png");
 
 	//scene3
-	//World w(32, 8, 32);
 	//w.loadFromHeightMap("heightmaps/pole.png");
 
 	//scene4
-	//World w(5, 8, 5);
 	//w.loadFromHeightMap("heightmaps/Untitled.png");
 	// 
 	//scene5
-	World w(2, 2, 2);
-	w.loadFromHeightMap("heightmaps/Untitled1.png");
-	//World w(2, 2, 2);
-	//for (int i = 0; i < 10000; i++) {
-	//	w.setBlock(rand() % (64 *64) / 64, rand() / 64 % 64, rand() % 64, 1);
-	//}
+	//w.loadFromHeightMap("heightmaps/Untitled1.png");
+	w.loadFromFile(curr_map);
+	
+	float light_ratio = 1.f;
 
 	Camera cam;
 	
@@ -126,8 +125,17 @@ int main() {
 			sh.setUniform1i("sz_x", w.getSize().x);
 			sh.setUniform1i("sz_y", w.getSize().y);
 			sh.setUniform1i("sz_z", w.getSize().z);
+			sh.setUniform1f("light_ratio", light_ratio);
 		}
-
+		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_UP)) {
+			light_ratio += 3 * win.get_deltaTime();
+			sh.setUniform1f("light_ratio", light_ratio);
+		}
+		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_DOWN)) {
+			light_ratio -= 3 * win.get_deltaTime();
+			sh.setUniform1f("light_ratio", light_ratio);
+		}
+		
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) l_pressed = false;
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) r_pressed = false;
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && (!l_pressed || glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_ALT))) {
@@ -167,7 +175,6 @@ int main() {
 
 		cam.update(win);
 		sh.setCamera(cam);
-		//std::cout << cam.cameraFront.x << " " << cam.cameraFront.y << " " << cam.cameraFront.z << "\n";
 
 		sh.setUniform1f("tr",timer);
 		texture_pack.bind();
@@ -181,7 +188,6 @@ int main() {
 		win.frameEnd();
 	}
 
-	
 	glDeleteBuffers(1, &ssbo);
 	
 	

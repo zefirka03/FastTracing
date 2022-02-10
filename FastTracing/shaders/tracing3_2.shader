@@ -93,6 +93,7 @@ out vec4 color;
 uniform float tr;
 uniform vec2 resolution;
 uniform Camera cam;
+uniform float light_ratio;
 uniform int sz_x, sz_y, sz_z;
 uniform sampler2D texture_pack;
 
@@ -350,30 +351,36 @@ void main() {
 	float pix = (tan(cam.fov / 2.f) * cam.dist * 2) / resolution.x;
 	Ray r, mid;
 
-	r.rayOrig = cam.cameraPos;
-	r.rayDir = normalize(cam.cameraFront * cam.dist
-		+ vec3((gl_FragCoord.x - resolution.x / 2) * pix) * cam.cameraRight
-		+ vec3((gl_FragCoord.y - resolution.y / 2) * pix) * cam.cameraUp);
+	
 
 	CollisionInfo cl1,cl2;
 
-	vec4 clr = vec4(1.0);
-	float seed = float(float(gl_FragCoord.x) * 1973.5412f + float(gl_FragCoord.y) * 9277.676f + tr * 26699.932931f) + 9.495512f;
+	vec4 clr = vec4(1.0), clor = vec4(0.0);
 
-	for (int i = 0; i < 8; ++i){
-		if (DDA_chunks(r, cl1)){
-			clr *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / 32.f, cl1.uv.y));
-				r.rayDir = normalize(cl1.normal * 1.001f + randomInUnitSphere(seed));
+	const int samples = 1;
+
+	for (int j = 0; j < samples; j++) {
+		float seed = float(float(gl_FragCoord.x) * 19.512f + float(gl_FragCoord.y) * 92.676f + tr * 26.9321f) + 9.4952f + j;
+		clr = vec4(1.0);
+		r.rayOrig = cam.cameraPos;
+		r.rayDir = normalize(cam.cameraFront * cam.dist
+			+ vec3((gl_FragCoord.x - resolution.x / 2) * pix) * cam.cameraRight
+			+ vec3((gl_FragCoord.y - resolution.y / 2) * pix) * cam.cameraUp);
+		for (int i = 0; i < 8; ++i) {
+			if (DDA_chunks(r, cl1)) {
+				clr *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / 32.f, cl1.uv.y));
+				r.rayDir = normalize(cl1.normal * 1.003f + randomInUnitSphere(seed));
 				r.rayOrig = cl1.collisionPoint + cl1.normal * 0.003f;
+			}
+			else {
+				float tt = 0.5 * (r.rayDir.y + 1.0);
+				clr *= mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio;
+				break;
+			}
 		}
-		else{
-			float tt = 0.5 * (r.rayDir.y + 1.0);
-			clr *= mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt);
-			break;
-		}
+		clor += clr;
 	}
-	color = clr;
-	
+	color = sqrt(clor / float(samples));
 	//sphere in collisionPoint
 	//mid.rayOrig = cam.cameraPos;
 	//mid.rayDir = cam.cameraFront;
@@ -384,5 +391,5 @@ void main() {
 
 	//UI
 	if ((gl_FragCoord.x - int(resolution.x) / 2) * (gl_FragCoord.x - int(resolution.x) / 2) +
-		(gl_FragCoord.y - int(resolution.y) / 2) * (gl_FragCoord.y - int(resolution.y) / 2) < 2) color = vec4(1, 1, 1, 1);
+		(gl_FragCoord.y - int(resolution.y) / 2) * (gl_FragCoord.y - int(resolution.y) / 2) < 3) color = vec4(1, 1, 1, 1);
 }
