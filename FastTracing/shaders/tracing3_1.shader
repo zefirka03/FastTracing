@@ -340,6 +340,8 @@ vec3 randomInUnitSphere(inout float seed)
 	return r * vec3(sqrt(1.0 - h.x * h.x) * vec2(sin(phi), cos(phi)), h.x);
 }
 
+const int count_of_blocks = 32;
+
 
 void main() {
 	vec3 GlobalLight = vec3(1500, 1500, 1500);
@@ -359,7 +361,7 @@ void main() {
 
 	if (DDA_chunks(r, cl1))
 	{
-		clr *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / 32.f, cl1.uv.y)) * vec4((cl1.side + 1) / 6.f);
+		clr *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), cl1.uv.y/2.f)) * vec4((cl1.side + 1) / 6.f);
 	}
 	else
 	{

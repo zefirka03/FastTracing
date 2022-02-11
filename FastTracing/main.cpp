@@ -25,7 +25,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 int main() {
 	Window win(WIN_X, WIN_Y, "fck", 1);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
-	World w("worlds/map512.wrld");
+	World w("worlds/first1.wrld");
 	//World w;
 
 	//scene1
@@ -79,7 +79,7 @@ int main() {
 	pipe_2.Init("shaders/pipe_2.shader", 0);
 
 	Texture texture_pack;
-	texture_pack.loadFromFile("textures/texture_pack_min.jpg");
+	texture_pack.loadFromFile("textures/texture_pack_min.png");
 
 	GLuint ssbo;
 	glGenBuffers(1, &ssbo);
@@ -119,10 +119,12 @@ int main() {
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_UP)) {
 			light_ratio += 3 * win.get_deltaTime();
 			sh.setUniform1f("light_ratio", light_ratio);
+			sample = 1;
 		}
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_DOWN)) {
 			light_ratio -= 3 * win.get_deltaTime();
 			sh.setUniform1f("light_ratio", light_ratio);
+			sample = 1;
 		}
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) l_pressed = false;
 		if (glfwGetMouseButton(win.getGLFWWindow(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) r_pressed = false;
@@ -175,6 +177,7 @@ int main() {
 
 		temp_fbo.bind();
 		main_vao.setShader(sh);
+		sh.setUniform1i("curr_sample", sample);
 		main_vao.draw();
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		temp_fbo.unbind();

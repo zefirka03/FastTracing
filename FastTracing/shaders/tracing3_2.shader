@@ -38,7 +38,6 @@ struct CollisionInfo {
 	vec3 collisionPoint;
 	vec3 normal;
 	int side;
-	uint debug;
 	vec2 uv;
 	uint id;
 };
@@ -91,6 +90,7 @@ layout(std430, binding = 2) buffer ColorSSBO {
 
 out vec4 color;
 uniform float tr;
+uniform int curr_sample;
 uniform vec2 resolution;
 uniform Camera cam;
 uniform float light_ratio;
@@ -318,32 +318,40 @@ bool DDA_chunks(Ray r, inout CollisionInfo cl) {
 }
 
 
-uint baseHash(uvec2 p)
+uint wang_hash(inout uint seed)
 {
-	p = 1103515245U * ((p >> 1U) ^ (p.yx));
-	uint h32 = 1103515245U * ((p.x) ^ (p.y >> 3U));
-	return h32 ^ (h32 >> 16);
-}
-vec3 hash3(inout float seed)
-{
-	uint n = baseHash(floatBitsToUint(vec2(seed += 0.1, seed += 0.1)));
-	uvec3 rz = uvec3(n, n * 16807U, n * 48271U);
-	return vec3(rz & uvec3(0x7fffffffU)) / float(0x7fffffff);
+	seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
+	seed *= uint(9);
+	seed = seed ^ (seed >> 4);
+	seed *= uint(0x27d4eb2d);
+	seed = seed ^ (seed >> 15);
+	return seed;
 }
 
-float rand(vec2 v)
+float RandomFloat01(inout uint state)
 {
-	return fract(sin(dot(v.xy, vec2(12.9898, 78.233))) * 43758.5453);
+	return float(wang_hash(state)) / 4294967296.0;
 }
 
-vec3 randomInUnitSphere(inout float seed)
+vec3 RandomUnitVector(inout uint state)
 {
-	vec3 h = hash3(seed) * vec3(2.0, 6.28318530718, 1.0) - vec3(1.0, 0.0, 0.0);
-	float phi = h.y;
-	float r = pow(h.z, 1.0 / 3.0);
-	return r * vec3(sqrt(1.0 - h.x * h.x) * vec2(sin(phi), cos(phi)), h.x);
+	float z = RandomFloat01(state) * 2.0f - 1.0f;
+	float a = RandomFloat01(state) * c_twopi;
+	float r = sqrt(1.0f - z * z);
+	float x = r * cos(a);
+	float y = r * sin(a);
+	return vec3(x, y, z);
 }
 
+vec3 diffuseRayDir(inout Ray r, CollisionInfo cl, inout uint seed) {
+	return normalize(cl.normal * 1.003f + RandomUnitVector(seed));
+}
+
+vec3 reflectRayDir(inout Ray r, CollisionInfo cl) {
+	return normalize(r.rayDir - 2 * cl.normal * dot(r.rayDir, cl.normal));
+}
+
+const int count_of_blocks = 32;
 
 void main() {
 	vec3 GlobalLight = vec3(1500, 1500, 1500);
@@ -353,34 +361,43 @@ void main() {
 
 	CollisionInfo cl1,cl2;
 
-	vec4 clr = vec4(1.0), clor = vec4(0.0);
+	vec4 clr = vec4(0.0), clor = vec4(0.0);
 	vec3 throughput = vec3(1.0f, 1.0f, 1.0f);
 
 	const int samples = 1;
 
 	for (int j = 0; j < samples; j++) {
-		float seed = float(float(gl_FragCoord.x) * 19.512f + float(gl_FragCoord.y) * 92.676f + tr * 26.9321f) + 9.4952f + j;
+		uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample+tr) * uint(26699)) | uint(1);
 		clr = vec4(0.0);
+		clor = vec4(0.0);
+		throughput = vec3(1.0f, 1.0f, 1.0f);
 		r.rayOrig = cam.cameraPos;
 		r.rayDir = normalize(cam.cameraFront * cam.dist
 			+ vec3((gl_FragCoord.x - resolution.x / 2) * pix) * cam.cameraRight
 			+ vec3((gl_FragCoord.y - resolution.y / 2) * pix) * cam.cameraUp);
 		for (int i = 0; i < 8; ++i) {
 			if (DDA_chunks(r, cl1)) {
-				//clr *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / 32.f, cl1.uv.y));
-				throughput *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / 32.f, cl1.uv.y)).rgb;
-				r.rayDir = normalize(cl1.normal * 1.003f + randomInUnitSphere(seed));
+				vec3 color_parameters = texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 1) / 2.f)).rgb;
+
+				float roughness = color_parameters.r;
+				int emission = int(color_parameters.b * 255);
+
+				clr += emission * vec4(throughput, 1);
+				throughput *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 0) / 2.f)).rgb;
+
 				r.rayOrig = cl1.collisionPoint + cl1.normal * 0.003f;
+				r.rayDir = normalize(mix(reflectRayDir(r, cl1), diffuseRayDir(r, cl1, seed), roughness * roughness));
 			}
 			else {
 				float tt = 0.5 * (r.rayDir.y + 1.0);
-				clr = mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
+				clr += mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
+				//clr += mix(vec4(1.0, 0.6, 0.3, 1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
 				break;
 			}
 		}
 		clor += clr;
 	}
-	color = sqrt(clor / float(samples));
+	color = clor / float(samples);
 	//sphere in collisionPoint
 	//mid.rayOrig = cam.cameraPos;
 	//mid.rayDir = cam.cameraFront;

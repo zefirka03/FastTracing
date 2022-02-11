@@ -6,11 +6,11 @@ Texture::Texture(){
 }
 
 void Texture::loadFromFile(const char* path) {
-	unsigned char* image = SOIL_load_image(path, &wh, &hh, 0, SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image(path, &wh, &hh, 0, SOIL_LOAD_RGBA);
 	this->bind();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wh, hh, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wh, hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	this->unbind();
 }
 
