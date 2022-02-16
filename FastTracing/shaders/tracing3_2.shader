@@ -21,6 +21,9 @@ void main() {
 
 const float c_twopi = 2.0f * PI;
 
+#define RANGE uvec4(65535u)
+#define MAX_RANDOM float(RANGE-1u)
+
 struct Camera {
 	vec3	cameraPos,
 		cameraFront,
@@ -245,9 +248,8 @@ bool DDA_chunks(Ray r, inout CollisionInfo cl) {
 
 	vec3 w_size = vec3(sz_x * unit, sz_y * unit, sz_z * unit);
 
-	CollisionInfo cl1;
+	CollisionInfo cl1, clX;
 	if (ray_box_Intersec(r, vec3(0), w_size, cl1)) {
-
 		vec3 startPoint = cl1.collisionPoint;
 
 		vec3 curChunk = vec3(int(startPoint.x / unit), int(startPoint.y / unit), int(startPoint.z / unit));
@@ -284,18 +286,17 @@ bool DDA_chunks(Ray r, inout CollisionInfo cl) {
 				if (it > 0) cl.collisionPoint = startPoint + (rLen[side] - dDist[side]) * r.rayDir;
 				else cl.collisionPoint = startPoint;
 
-				if (side == 0) cl.normal = vec3(-1, 0, 0) * step[side];
+				if (side == 0)		cl.normal = vec3(-1, 0, 0) * step[side];
 				else if (side == 1) cl.normal = vec3(0, -1, 0) * step[side];
 				else if (side == 2) cl.normal = vec3(0, 0, -1) * step[side];
 				
-
 				cl.side = side;
 
-				CollisionInfo clX;
+				
 				r.rayOrig = cl.collisionPoint - cl.normal * 0.002f;
 				
-				
 				isIntersect = DDA_blocks(r, clX, int(curChunk.x + curChunk.y * sz_x + curChunk.z * sz_x * sz_y), side);
+				it++;
 				if (isIntersect) {
 					cl = clX;
 					break;
@@ -344,17 +345,20 @@ vec3 RandomUnitVector(inout uint state)
 }
 
 vec3 diffuseRayDir(inout Ray r, CollisionInfo cl, inout uint seed) {
-	return normalize(cl.normal * 1.003f + RandomUnitVector(seed));
+	return normalize(cl.normal * 1.001f + RandomUnitVector(seed));
 }
 
 vec3 reflectRayDir(inout Ray r, CollisionInfo cl) {
 	return normalize(r.rayDir - 2 * cl.normal * dot(r.rayDir, cl.normal));
 }
 
+
 const int count_of_blocks = 32;
 
+
+
 void main() {
-	vec3 GlobalLight = vec3(1500, 1500, 1500);
+	vec3 GlobalLight = vec3(10000, 10000, 6000);
 
 	float pix = (tan(cam.fov / 2.f) * cam.dist * 2) / resolution.x;
 	Ray r, mid;
@@ -366,15 +370,18 @@ void main() {
 
 	const int samples = 1;
 
+	uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample+tr) * uint(26699)) | uint(1);
 	for (int j = 0; j < samples; j++) {
-		uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample+tr) * uint(26699)) | uint(1);
 		clr = vec4(0.0);
 		clor = vec4(0.0);
 		throughput = vec3(1.0f, 1.0f, 1.0f);
+
+		vec2 jitter = vec2(RandomFloat01(seed), RandomFloat01(seed)) - 0.5f;
+
 		r.rayOrig = cam.cameraPos;
 		r.rayDir = normalize(cam.cameraFront * cam.dist
-			+ vec3((gl_FragCoord.x - resolution.x / 2) * pix) * cam.cameraRight
-			+ vec3((gl_FragCoord.y - resolution.y / 2) * pix) * cam.cameraUp);
+			+ vec3((gl_FragCoord.x + jitter.x - resolution.x / 2) * pix) * cam.cameraRight
+			+ vec3((gl_FragCoord.y + jitter.y - resolution.y / 2) * pix) * cam.cameraUp);
 		for (int i = 0; i < 8; ++i) {
 			if (DDA_chunks(r, cl1)) {
 				vec3 color_parameters = texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 1) / 2.f)).rgb;
@@ -382,22 +389,35 @@ void main() {
 				float roughness = color_parameters.r;
 				int emission = int(color_parameters.b * 255);
 
-				clr += emission * vec4(throughput, 1);
 				throughput *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 0) / 2.f)).rgb;
+				clr += emission * vec4(throughput, 1);
+				if (emission > 0) break;
 
 				r.rayOrig = cl1.collisionPoint + cl1.normal * 0.003f;
 				r.rayDir = normalize(mix(reflectRayDir(r, cl1), diffuseRayDir(r, cl1, seed), roughness * roughness));
+
+				//Ray sunRay;
+				//CollisionInfo CI_forSun;
+				//sunRay.rayDir = normalize(GlobalLight - r.rayDir);
+				//sunRay.rayOrig = r.rayOrig;
+				//
+				//if (!DDA_chunks(sunRay, CI_forSun)) {
+				//	clr += 1.2f*vec4(1.0, 0.85, 0.75, 1.0) * light_ratio * vec4(throughput, 1);
+				//}
 			}
 			else {
 				float tt = 0.5 * (r.rayDir.y + 1.0);
-				clr += mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
+				clr += mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput, 1);
 				//clr += mix(vec4(1.0, 0.6, 0.3, 1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
 				break;
 			}
 		}
 		clor += clr;
 	}
+	
 	color = clor / float(samples);
+
+	
 	//sphere in collisionPoint
 	//mid.rayOrig = cam.cameraPos;
 	//mid.rayDir = cam.cameraFront;

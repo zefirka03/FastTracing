@@ -14,18 +14,18 @@
 
 int p_block_id = 1;
 
-const char* curr_map = "worlds/first1.wrld";
+const char* curr_map = "worlds/first.wrld";
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	p_block_id += yoffset;
-	if (p_block_id > 17) p_block_id = 17;
+	if (p_block_id > 16) p_block_id = 16;
 	if (p_block_id < 1) p_block_id = 1;
 }
 
 int main() {
 	Window win(WIN_X, WIN_Y, "fck", 1);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
-	World w("worlds/first1.wrld");
+	World w("worlds/first.wrld");
 	//World w;
 
 	//scene1
@@ -79,7 +79,7 @@ int main() {
 	pipe_2.Init("shaders/pipe_2.shader", 0);
 
 	Texture texture_pack;
-	texture_pack.loadFromFile("textures/texture_pack_min.png");
+	texture_pack.loadFromFile("textures/texture_pack.png");
 
 	GLuint ssbo;
 	glGenBuffers(1, &ssbo);
@@ -117,12 +117,13 @@ int main() {
 			sh.setUniform1f("light_ratio", light_ratio);
 		}
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_UP)) {
-			light_ratio += 3 * win.get_deltaTime();
+			light_ratio += 0.5 * win.get_deltaTime();
 			sh.setUniform1f("light_ratio", light_ratio);
 			sample = 1;
 		}
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_DOWN)) {
-			light_ratio -= 3 * win.get_deltaTime();
+			light_ratio -= 0.5 * win.get_deltaTime();
+			if (light_ratio < 0) light_ratio = 0;
 			sh.setUniform1f("light_ratio", light_ratio);
 			sample = 1;
 		}

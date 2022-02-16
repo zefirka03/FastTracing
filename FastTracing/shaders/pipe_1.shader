@@ -15,18 +15,20 @@ void main() {
 #version 430 core
 
 in vec2 tx_cord;
-uniform sampler2D tex1;
+uniform sampler2D tex1; // main
 uniform sampler2D tex2; //temp
 
 uniform int curr_sample;
 
 out vec4 color;
 
+
+
 void main() {
-
     vec4 cl1 = texture(tex1, tx_cord); // main
-    vec4 cl0 = texture(tex2, tx_cord); // buf1
+    vec4 cl0 = texture(tex2, tx_cord); // temp
 
-    float blend = (cl1.a == 0.0f || curr_sample == 1) ? 1.0f : 1.0f / (1.0f + (1.0f / cl1.a));
+    float blend = (cl1.a == 0.0f || curr_sample == 1) ? 1.0f : (1.0f / (1.0f + 1.0f / cl1.a));
     color = vec4(mix(cl1.rgb, cl0.rgb, blend), blend);
+    //color = vec4(cl1.a, color.gba);
 }

@@ -10,14 +10,14 @@ void Texture::loadFromFile(const char* path) {
 	this->bind();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wh, hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16, wh, hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	this->unbind();
 }
 
 void Texture::init(int x, int y) {
 	wh = x, hh = y;
 	this->bind();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, wh, hh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, wh, hh, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	this->unbind();
