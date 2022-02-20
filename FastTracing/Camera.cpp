@@ -15,7 +15,7 @@ Camera::Camera() {
 
 	//cameraUp = glm::vec3(0, 1, 0);
 	//cameraRight = glm::vec3(1, 0, 0);
-	fov = 2 * PI / 3;
+	fov =  2 * PI / 3;
 	dist = 0.5f;
 	speed = 0.08f;
 	sense = 0.001f;
@@ -27,7 +27,7 @@ Camera::Camera() {
 bool Camera::update(Window& win) {
 	bool fl = false;
 	if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_SHIFT)) speed = 150.f;
-	else if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_CONTROL)) speed = 5.f;
+	else if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_LEFT_CONTROL)) speed = 1.f;
 	else speed = 15.f;
 
 	if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_W)) {

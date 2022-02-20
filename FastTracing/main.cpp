@@ -9,28 +9,29 @@
 #include "CollisionInfo.h"
 #include "FBO.h"
 
-#define WIN_X 1920
-#define WIN_Y 1080
+#define WIN_X 1440
+#define WIN_Y 900
 
 int p_block_id = 1;
 
-const char* curr_map = "worlds/first.wrld";
+const char* curr_map = "worlds/first2.wrld";
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	p_block_id += yoffset;
-	if (p_block_id > 16) p_block_id = 16;
+	if (p_block_id > 17) p_block_id = 17;
 	if (p_block_id < 1) p_block_id = 1;
 }
 
-int main() {
-	Window win(WIN_X, WIN_Y, "fck", 1);
-	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
-	World w("worlds/first.wrld");
-	//World w;
 
+int main() {
+	Window win(WIN_X, WIN_Y, "fck", 0);
+	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
+
+	World w("worlds/first6.wrld");
+	
 	//scene1
 
-	//w.loadFromHeightMapToFile("heightmaps/map16.png", "worlds/map512.wrld");
+	//w.loadFromHeightMapToFile("heightmaps/future512.png", "worlds/future512.wrld");
 
 	//scene2
 	//w.loadFromHeightMap("heightmaps/0qXhFa.png");

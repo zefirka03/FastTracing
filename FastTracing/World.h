@@ -1,5 +1,6 @@
 #pragma once
 #include "Chunk.h"
+#define WORLD_SIZE_DEFAULT 4
 
 class World{
 public:

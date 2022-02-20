@@ -116,13 +116,13 @@ vec3 addCoord(vec3 pos, vec3 addr) {
 void updateUV(inout CollisionInfo cl) {
 	switch (cl.side) {
 	case 0:
-		cl.uv = vec2(cl.collisionPoint.z - int(cl.collisionPoint.z), cl.collisionPoint.y - int(cl.collisionPoint.y));
+		cl.uv = vec2(1.f-0.0000001f) - vec2(cl.collisionPoint.z - int(cl.collisionPoint.z), cl.collisionPoint.y - int(cl.collisionPoint.y));
 		break;
 	case 1:
-		cl.uv = vec2(cl.collisionPoint.x - int(cl.collisionPoint.x), cl.collisionPoint.z - int(cl.collisionPoint.z));
+		cl.uv = vec2(1.f - 0.0000001f) - vec2(cl.collisionPoint.x - int(cl.collisionPoint.x), cl.collisionPoint.z - int(cl.collisionPoint.z));
 		break;
 	case 2:
-		cl.uv = vec2(cl.collisionPoint.x - int(cl.collisionPoint.x), cl.collisionPoint.y - int(cl.collisionPoint.y));
+		cl.uv = vec2(1.f - 0.0000001f) - vec2(cl.collisionPoint.x - int(cl.collisionPoint.x), cl.collisionPoint.y - int(cl.collisionPoint.y));
 		break;
 	};
 }
@@ -354,11 +354,10 @@ vec3 reflectRayDir(inout Ray r, CollisionInfo cl) {
 
 
 const int count_of_blocks = 32;
-
-
+const float G = 0.98f;
 
 void main() {
-	vec3 GlobalLight = vec3(10000, 10000, 6000);
+	vec3 GlobalLight = vec3(6000, 10000, 6000);
 
 	float pix = (tan(cam.fov / 2.f) * cam.dist * 2) / resolution.x;
 	Ray r, mid;
@@ -376,33 +375,42 @@ void main() {
 		clor = vec4(0.0);
 		throughput = vec3(1.0f, 1.0f, 1.0f);
 
+		//anti-alsng
 		vec2 jitter = vec2(RandomFloat01(seed), RandomFloat01(seed)) - 0.5f;
 
 		r.rayOrig = cam.cameraPos;
 		r.rayDir = normalize(cam.cameraFront * cam.dist
 			+ vec3((gl_FragCoord.x + jitter.x - resolution.x / 2) * pix) * cam.cameraRight
 			+ vec3((gl_FragCoord.y + jitter.y - resolution.y / 2) * pix) * cam.cameraUp);
+
 		for (int i = 0; i < 8; ++i) {
 			if (DDA_chunks(r, cl1)) {
 				vec3 color_parameters = texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 1) / 2.f)).rgb;
 
 				float roughness = color_parameters.r;
+				float percentSpecular = color_parameters.g;
 				int emission = int(color_parameters.b * 255);
+
+				float doSpecular = (RandomFloat01(seed) < percentSpecular) ? 1.0f : 0.0f;
 
 				throughput *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 0) / 2.f)).rgb;
 				clr += emission * vec4(throughput, 1);
-				if (emission > 0) break;
+
+				vec3 diffuseRayDir = diffuseRayDir(r, cl1, seed);
+				vec3 specularRayDir = reflectRayDir(r, cl1);
+				specularRayDir = normalize(mix(specularRayDir, diffuseRayDir, roughness * roughness));
 
 				r.rayOrig = cl1.collisionPoint + cl1.normal * 0.003f;
-				r.rayDir = normalize(mix(reflectRayDir(r, cl1), diffuseRayDir(r, cl1, seed), roughness * roughness));
+				r.rayDir = mix(diffuseRayDir, specularRayDir, doSpecular);
 
 				//Ray sunRay;
 				//CollisionInfo CI_forSun;
-				//sunRay.rayDir = normalize(GlobalLight - r.rayDir);
+				//sunRay.rayDir = normalize(GlobalLight - r.rayDir + RandomUnitVector(seed));
 				//sunRay.rayOrig = r.rayOrig;
 				//
 				//if (!DDA_chunks(sunRay, CI_forSun)) {
-				//	clr += 1.2f*vec4(1.0, 0.85, 0.75, 1.0) * light_ratio * vec4(throughput, 1);
+				//	clr += vec4(1.0, 0.85, 0.75, 1.0) * light_ratio * vec4(throughput, 1);
+				//	if (roughness < 1)break;
 				//}
 			}
 			else {

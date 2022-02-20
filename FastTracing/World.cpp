@@ -101,7 +101,7 @@ void World::loadFromFile(const char* path) {
 		fclose(file);
 	}
 	else {
-		int size = 2;
+		int size = WORLD_SIZE_DEFAULT;
 		this->init(size, size, size);
 		for (int i = 0; i < size * size * CHUNK_SIZE * CHUNK_SIZE; i++)
 			this->setBlock(i / (size * CHUNK_SIZE), 0, i % (size * CHUNK_SIZE), 1);
