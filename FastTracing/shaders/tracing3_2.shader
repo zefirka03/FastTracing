@@ -116,7 +116,7 @@ vec3 addCoord(vec3 pos, vec3 addr) {
 void updateUV(inout CollisionInfo cl) {
 	switch (cl.side) {
 	case 0:
-		cl.uv = vec2(1.f-0.0000001f) - vec2(cl.collisionPoint.z - int(cl.collisionPoint.z), cl.collisionPoint.y - int(cl.collisionPoint.y));
+		cl.uv = vec2(1.f - 0.0000001f) - vec2(cl.collisionPoint.z - int(cl.collisionPoint.z), cl.collisionPoint.y - int(cl.collisionPoint.y));
 		break;
 	case 1:
 		cl.uv = vec2(1.f - 0.0000001f) - vec2(cl.collisionPoint.x - int(cl.collisionPoint.x), cl.collisionPoint.z - int(cl.collisionPoint.z));

@@ -109,6 +109,20 @@ void World::loadFromFile(const char* path) {
 	}
 }
 
+void World::loadFromFile_testOBJ(const char* path) {
+	FILE* file;
+	if (!fopen_s(&file, path, "r")) {
+		this->init(12, 12, 12);
+		int _x, _y, _z;
+		while (!feof(file)) {
+			fscanf_s(file, "v %d %d %d\n", &_x, &_y, &_z);
+			//printf("v %d %d %d\n",_x, _y, _z);
+			this->setBlock(_x, _y, _z, 3);
+		}
+		fclose(file);
+	}
+}
+
 
 void World::saveToFile(const char* path) {
 	FILE* file;

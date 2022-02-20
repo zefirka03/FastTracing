@@ -87,13 +87,13 @@ void Shader::setUniform1i(std::string name, int data) {
 	unuse();
 }
 
-void Shader::setCamera(Camera camera) {
-	this->setUniformV3("cam.cameraPos", camera.cameraPos);
-	this->setUniformV3("cam.cameraUp", camera.cameraUp);
-	this->setUniformV3("cam.cameraRight", camera.cameraRight);
-	this->setUniformV3("cam.cameraFront", camera.cameraFront);
-	this->setUniform1f("cam.fov", camera.fov);
-	this->setUniform1f("cam.dist", camera.dist);
+void Shader::setCamera(Camera camera, const char* name) {
+	this->setUniformV3(std::string(name) + ".cameraPos", camera.cameraPos);
+	this->setUniformV3(std::string(name) + ".cameraUp", camera.cameraUp);
+	this->setUniformV3(std::string(name) + ".cameraRight", camera.cameraRight);
+	this->setUniformV3(std::string(name) + ".cameraFront", camera.cameraFront);
+	this->setUniform1f(std::string(name) + ".fov", camera.fov);
+	this->setUniform1f(std::string(name) + ".dist", camera.dist);
 }
 
 

@@ -27,7 +27,8 @@ int main() {
 	Window win(WIN_X, WIN_Y, "fck", 0);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
 
-	World w("worlds/first6.wrld");
+	World w("worlds/first3.wrld");
+	//w.loadFromFile_testOBJ("testFiles/fil.obj");
 	
 	//scene1
 
@@ -47,7 +48,7 @@ int main() {
 	
 	float light_ratio = 1.f;
 
-	Camera cam;
+	Camera cam, prev_cam;
 	
 	std::vector<float> dt = { 1,  1,
 		-1,  1,
@@ -166,9 +167,11 @@ int main() {
 			r_pressed = true;
 			sample = 1;
 		}
+
+		prev_cam = cam;
 		if (cam.update(win)) sample = 1;
 
-		sh.setCamera(cam);
+		sh.setCamera(cam, "cam");
 
 		sh.setUniform1f("tr",timer);
 		texture_pack.bind();
