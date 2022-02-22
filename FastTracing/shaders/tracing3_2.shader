@@ -364,15 +364,15 @@ void main() {
 
 	CollisionInfo cl1,cl2;
 
-	vec4 clr = vec4(0.0), clor = vec4(0.0);
+	vec3 clr = vec3(0.0), clor = vec3(0.0);
 	vec3 throughput = vec3(1.0f, 1.0f, 1.0f);
 
 	const int samples = 1;
 
 	uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample+tr) * uint(26699)) | uint(1);
 	for (int j = 0; j < samples; j++) {
-		clr = vec4(0.0);
-		clor = vec4(0.0);
+		clr = vec3(0.0);
+		clor = vec3(0.0);
 		throughput = vec3(1.0f, 1.0f, 1.0f);
 
 		//anti-alsng
@@ -385,6 +385,7 @@ void main() {
 
 		for (int i = 0; i < 8; ++i) {
 			if (DDA_chunks(r, cl1)) {
+				if (i == 0) color.a = length(r.rayOrig - cl1.collisionPoint);
 				vec3 color_parameters = texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 1) / 2.f)).rgb;
 
 				float roughness = color_parameters.r;
@@ -394,7 +395,7 @@ void main() {
 				float doSpecular = (RandomFloat01(seed) < percentSpecular) ? 1.0f : 0.0f;
 
 				throughput *= texture(texture_pack, vec2((cl1.uv.x + cl1.id - 1) / float(count_of_blocks), (cl1.uv.y + 0) / 2.f)).rgb;
-				clr += emission * vec4(throughput, 1);
+				clr += emission * throughput;
 
 				vec3 diffuseRayDir = diffuseRayDir(r, cl1, seed);
 				vec3 specularRayDir = reflectRayDir(r, cl1);
@@ -414,16 +415,17 @@ void main() {
 				//}
 			}
 			else {
+				if (i == 0) color.a = -1;
 				float tt = 0.5 * (r.rayDir.y + 1.0);
-				clr += mix(vec4(1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput, 1);
-				//clr += mix(vec4(1.0, 0.6, 0.3, 1.0), vec4(0.5, 0.7, 1.0, 1.0), tt) * light_ratio * vec4(throughput,1);
+				clr += mix(vec3(1.0), vec3(0.5, 0.7, 1.0), tt) * light_ratio * throughput;
+				//clr += mix(vec4(1.0, 0.6, 0.3, 1.0), vec4(0.5, 0.7, 1.0), tt) * light_ratio * vec4(throughput,1);
 				break;
 			}
 		}
 		clor += clr;
 	}
 	
-	color = clor / float(samples);
+	color = vec4(clor / float(samples), color.a);
 
 	
 	//sphere in collisionPoint

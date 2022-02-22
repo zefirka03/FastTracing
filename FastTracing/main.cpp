@@ -48,7 +48,7 @@ int main() {
 	
 	float light_ratio = 1.f;
 
-	Camera cam, prev_cam;
+	Camera cam, cam_prev;
 	
 	std::vector<float> dt = { 1,  1,
 		-1,  1,
@@ -78,6 +78,7 @@ int main() {
 	sh.setUniform1i("sz_z", w.getSize().z);
 
 	pipe_1.Init("shaders/pipe_1.shader", 0);
+	pipe_1.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
 	pipe_2.Init("shaders/pipe_2.shader", 0);
 
 	Texture texture_pack;
@@ -102,7 +103,7 @@ int main() {
 	int sample = 1;
 	while (!win.ShouldClose()) {
 		win.frameStart();
-
+		
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_4)) {
 			sh.Init("shaders/tracing3_1.shader", 0);
 			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
@@ -168,8 +169,8 @@ int main() {
 			sample = 1;
 		}
 
-		prev_cam = cam;
-		if (cam.update(win)) sample = 1;
+		cam_prev = cam;
+		if(cam.update(win)) sample = 1;
 
 		sh.setCamera(cam, "cam");
 
@@ -190,6 +191,8 @@ int main() {
 		main_fbo.bind();
 		main_vao.setShader(pipe_1);
 		pipe_1.setUniform1i("curr_sample", sample);
+		pipe_1.setCamera(cam, "cam");
+		pipe_1.setCamera(cam_prev, "cam_prev");
 		pipe_1.setUniform1i("tex1", 0);
 		glActiveTexture(GL_TEXTURE0);
 		main_fbo.bindFBO_Texture();
