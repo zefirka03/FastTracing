@@ -9,28 +9,30 @@
 #include "CollisionInfo.h"
 #include "FBO.h"
 
-#define WIN_X 1920
-#define WIN_Y 1080
+#define WIN_X 1440
+#define WIN_Y 900
 
 int p_block_id = 1;
 
-const char* curr_map = "worlds/first.wrld";
+const char* curr_map = "worlds/first2.wrld";
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	p_block_id += yoffset;
-	if (p_block_id > 16) p_block_id = 16;
+	if (p_block_id > 17) p_block_id = 17;
 	if (p_block_id < 1) p_block_id = 1;
 }
 
-int main() {
-	Window win(WIN_X, WIN_Y, "fck", 1);
-	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
-	World w("worlds/first.wrld");
-	//World w;
 
+int main() {
+	Window win(WIN_X, WIN_Y, "fck", 0);
+	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
+
+	World w("worlds/first1.wrld");
+	//w.loadFromFile_testOBJ("testFiles/fil.obj");
+	
 	//scene1
 
-	//w.loadFromHeightMapToFile("heightmaps/map16.png", "worlds/map512.wrld");
+	//w.loadFromHeightMapToFile("heightmaps/future512.png", "worlds/future512.wrld");
 
 	//scene2
 	//w.loadFromHeightMap("heightmaps/0qXhFa.png");
@@ -46,7 +48,7 @@ int main() {
 	
 	float light_ratio = 1.f;
 
-	Camera cam;
+	Camera cam, cam_prev;
 	
 	std::vector<float> dt = { 1,  1,
 		-1,  1,
@@ -76,6 +78,7 @@ int main() {
 	sh.setUniform1i("sz_z", w.getSize().z);
 
 	pipe_1.Init("shaders/pipe_1.shader", 0);
+	pipe_1.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
 	pipe_2.Init("shaders/pipe_2.shader", 0);
 
 	Texture texture_pack;
@@ -100,7 +103,7 @@ int main() {
 	int sample = 1;
 	while (!win.ShouldClose()) {
 		win.frameStart();
-
+		
 		if (glfwGetKey(win.getGLFWWindow(), GLFW_KEY_4)) {
 			sh.Init("shaders/tracing3_1.shader", 0);
 			sh.setUniformV2("resolution", glm::vec2(WIN_X, WIN_Y));
@@ -165,9 +168,11 @@ int main() {
 			r_pressed = true;
 			sample = 1;
 		}
-		if (cam.update(win)) sample = 1;
 
-		sh.setCamera(cam);
+		cam_prev = cam;
+		if(cam.update(win)) sample = 1;
+
+		sh.setCamera(cam, "cam");
 
 		sh.setUniform1f("tr",timer);
 		texture_pack.bind();
@@ -186,6 +191,8 @@ int main() {
 		main_fbo.bind();
 		main_vao.setShader(pipe_1);
 		pipe_1.setUniform1i("curr_sample", sample);
+		pipe_1.setCamera(cam, "cam");
+		pipe_1.setCamera(cam_prev, "cam_prev");
 		pipe_1.setUniform1i("tex1", 0);
 		glActiveTexture(GL_TEXTURE0);
 		main_fbo.bindFBO_Texture();

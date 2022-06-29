@@ -101,11 +101,25 @@ void World::loadFromFile(const char* path) {
 		fclose(file);
 	}
 	else {
-		int size = 2;
+		int size = WORLD_SIZE_DEFAULT;
 		this->init(size, size, size);
 		for (int i = 0; i < size * size * CHUNK_SIZE * CHUNK_SIZE; i++)
 			this->setBlock(i / (size * CHUNK_SIZE), 0, i % (size * CHUNK_SIZE), 1);
 		this->saveToFile(path);
+	}
+}
+
+void World::loadFromFile_testOBJ(const char* path) {
+	FILE* file;
+	if (!fopen_s(&file, path, "r")) {
+		this->init(12, 12, 12);
+		int _x, _y, _z;
+		while (!feof(file)) {
+			fscanf_s(file, "v %d %d %d\n", &_x, &_y, &_z);
+			//printf("v %d %d %d\n",_x, _y, _z);
+			this->setBlock(_x, _y, _z, 3);
+		}
+		fclose(file);
 	}
 }
 

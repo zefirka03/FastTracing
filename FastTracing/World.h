@@ -1,5 +1,6 @@
 #pragma once
 #include "Chunk.h"
+#define WORLD_SIZE_DEFAULT 8
 
 class World{
 public:
@@ -12,6 +13,7 @@ public:
 	void loadFromHeightMap(const char* path);
 	void loadFromHeightMapToFile(const char* heightmap_path, const char* file_path);
 	void loadFromFile(const char* path);
+	void loadFromFile_testOBJ(const char* path);
 	void saveToFile(const char* path);
 	void init(int x, int y, int z);
 	unsigned int getDataSize();
