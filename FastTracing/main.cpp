@@ -27,7 +27,7 @@ int main() {
 	Window win(WIN_X, WIN_Y, "fck", 0);
 	glfwSetScrollCallback(win.getGLFWWindow(), scroll_callback);
 
-	World w("worlds/first3.wrld");
+	World w("worlds/first1.wrld");
 	//w.loadFromFile_testOBJ("testFiles/fil.obj");
 	
 	//scene1

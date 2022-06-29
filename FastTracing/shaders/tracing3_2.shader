@@ -293,7 +293,7 @@ bool DDA_chunks(Ray r, inout CollisionInfo cl) {
 				cl.side = side;
 
 				
-				r.rayOrig = cl.collisionPoint - cl.normal * 0.002f;
+				r.rayOrig = cl.collisionPoint - cl.normal * 0.001f;
 				
 				isIntersect = DDA_blocks(r, clX, int(curChunk.x + curChunk.y * sz_x + curChunk.z * sz_x * sz_y), side);
 				it++;
@@ -357,7 +357,7 @@ const int count_of_blocks = 32;
 const float G = 0.98f;
 
 void main() {
-	vec3 GlobalLight = vec3(6000, 10000, 6000);
+	vec3 GlobalLight = vec3(6000, 2000, 3000);
 
 	float pix = (tan(cam.fov / 2.f) * cam.dist * 2) / resolution.x;
 	Ray r, mid;
@@ -369,7 +369,7 @@ void main() {
 
 	const int samples = 1;
 
-	uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample+tr) * uint(26699)) | uint(1);
+	uint seed = uint(uint(gl_FragCoord.x) * uint(1973) + uint(gl_FragCoord.y) * uint(9277) + uint(curr_sample) * uint(26699)) | uint(1);
 	for (int j = 0; j < samples; j++) {
 		clr = vec3(0.0);
 		clor = vec3(0.0);
@@ -406,19 +406,19 @@ void main() {
 
 				//Ray sunRay;
 				//CollisionInfo CI_forSun;
-				//sunRay.rayDir = normalize(GlobalLight - r.rayDir + RandomUnitVector(seed));
+				//sunRay.rayDir = normalize(normalize((GlobalLight - r.rayDir)) + 0.04f*RandomUnitVector(seed));
 				//sunRay.rayOrig = r.rayOrig;
 				//
 				//if (!DDA_chunks(sunRay, CI_forSun)) {
-				//	clr += vec4(1.0, 0.85, 0.75, 1.0) * light_ratio * vec4(throughput, 1);
-				//	if (roughness < 1)break;
+				//	clr += vec3(1.0, 0.65, 0.35) * light_ratio * vec3(throughput);
+				//	//if (roughness < 1)break;
 				//}
 			}
 			else {
 				if (i == 0) color.a = -1;
 				float tt = 0.5 * (r.rayDir.y + 1.0);
 				clr += mix(vec3(1.0), vec3(0.5, 0.7, 1.0), tt) * light_ratio * throughput;
-				//clr += mix(vec4(1.0, 0.6, 0.3, 1.0), vec4(0.5, 0.7, 1.0), tt) * light_ratio * vec4(throughput,1);
+				//clr += mix(vec3(1.0, 0.6, 0.3), vec3(0.5, 0.7, 1.0), tt) * light_ratio * throughput;
 				break;
 			}
 		}

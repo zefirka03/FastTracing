@@ -15,7 +15,7 @@ Window::Window(int width, int height, std::string name, bool fs) {
 	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glEnable(GL_BLEND);
 
-	glfwSwapInterval(0);
+	//glfwSwapInterval(0);
 
 	gpuInfo_timer = 10000;
 }

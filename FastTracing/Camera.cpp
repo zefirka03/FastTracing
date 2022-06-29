@@ -15,7 +15,7 @@ Camera::Camera() {
 
 	//cameraUp = glm::vec3(0, 1, 0);
 	//cameraRight = glm::vec3(1, 0, 0);
-	fov =   PI / 2;
+	fov =   2*PI / 3;
 	dist = 0.5f;
 	speed = 0.08f;
 	sense = 0.001f;
